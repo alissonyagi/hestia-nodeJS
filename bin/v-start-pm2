@@ -1,0 +1,17 @@
+#!/bin/bash
+
+source /etc/hestiacp/hestia.conf
+
+IFS=$'\n'
+
+for u in `"$HESTIA"/bin/v-list-users plain | cut -f1`; do
+	home=$(grep "^$u:" /etc/passwd | cut -d":" -f6)
+
+	for domain in `"$HESTIA"/bin/v-list-web-domains $u plain | cut -f1,18 | grep $'\t'"nodeJS$" | cut -f1`; do
+		ecosystem="$home/web/$domain/private/hestia-nodeJS/ecosystem.config.js"
+
+		if [ -f "$ecosystem" ]; then
+			/usr/sbin/runuser -l $u -c "echo pm2 start \"$ecosystem\" | bash -i" &> /dev/null
+		fi
+	done
+done
