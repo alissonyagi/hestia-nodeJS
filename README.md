@@ -41,7 +41,7 @@ npm install -g pm2
 ```
 
 5. Create a web domain using HestiaCP.
-6. Upload your app to ~/web/[your-domain-here]/private/node (whatever method you prefer).
+6. Upload your app to `~/web/[your-domain-here]/private/node` (whatever method you prefer).
 7. On HestiaCP
   - Edit the web domain created on step 5
   - Advanced Options
@@ -55,7 +55,8 @@ npm install -g pm2
   pm2 status
   ```
   - If it does not list your domain, review the *How to use* section above (just in case, you know).
-  - If it lists with and **error* status, check the logs:
+  - If it lists with an **error** status, check the logs:
+
     ```
     pm2 logs
     ```
