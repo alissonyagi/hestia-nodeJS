@@ -4,7 +4,7 @@ A simple (for me, at least) way to run NodeJS reliably through HestiaCP.
 
 Supports multiple users/domains, each running on its own Unix Domain Socket.
 
-This project is based on [JLFdzDev's hestiacp-nodejs](https://github.com/JLFdzDev/hestiacp-nodejs) idea.
+This project is inspired by [JLFdzDev's hestiacp-nodejs](https://github.com/JLFdzDev/hestiacp-nodejs).
 
 ## Installation
 First, login to server shell with a user with sudo permission (or run as root).
@@ -41,12 +41,30 @@ npm install -g pm2
 ```
 
 5. Create a web domain using HestiaCP.
-6. Upload your app to `~/web/[your-domain-here]/private/node` (whatever method you prefer).
+6. Upload your app to `~/web/[your-domain-here]/private/node/` (whatever method you prefer).
 7. On HestiaCP
   - Edit the web domain created on step 5
   - Advanced Options
   - Change **Proxy Template** to **nodeJS**.
   - Save
+
+8. A node module is exposed by **hestia-nodeJS** so minimal project modifications are needed.
+  - Instead of using like:
+  ```
+  const http = require('node:http')
+  ```
+  - Change it to:
+  ```
+  const http = require('hestia-uds')
+  ```
+
+  - Server listening must be changed also, pointing to socket file or using `process.env.PORT` (automatically set when using generated ***ecosystem.config.php***). For example:
+  ```
+  server.listen(process.env.PORT)
+  ```
+
+> [!NOTE]
+> Since SSL is handled by HestiaCP's proxy, all specific configurations (including certificates) can be left out and handled directly on HestiaCP.
 
 ## Troubleshoot
 1. Login to server shell
