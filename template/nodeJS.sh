@@ -7,12 +7,14 @@ home=$4
 docroot=$5
 
 www="www-data"
-app="$home/$user/web/$domain/private/node"
-base="$home/$user/web/$domain/private/hestia-nodeJS"
-ecosystem="$base/ecosystem.config.js"
+app="${home}/${user}/web/${domain}/private/node"
+base="${home}/${user}/web/${domain}/private/hestia-nodeJS"
+ecosystem="${base}/ecosystem.config.js"
+sockets="${home}/${user}/conf/web/${domain}/nginx-hestia-nodeJS-sockets.conf"
 
 if [ ! -d "$app" ]; then
 	mkdir "$app"
+	chown $user:$user "$app"
 fi
 
 if [ ! -d "$base" ]; then
@@ -33,25 +35,35 @@ else
 	cwd=$(dirname "$json")
 fi
 
-cat > "$ecosystem" <<EOL
+if [ ! -f "$ecosystem" ]; then
+	cat > "$ecosystem" <<EOL
 module.exports = {
-    apps: [{
-        name: "$domain",
-        cwd: "$cwd",
-        script: "$entry",
-        instances: "1",
-        env: {
-            "PORT": "$base/hestia-nodeJS.sock",
-            "HOST": "127.0.0.1",
-            "NODE_PATH": "$HESTIA/data/nodeJS"
-        }
-    }]
+  apps: [{
+    name: "${domain}",
+    cwd: "${cwd}",
+    script: "${entry}",
+    instances: "1",
+    exec_mode: "cluster",
+    env: {
+      "PORT": "${base}/${domain}-0.sock",
+      "HOST": "127.0.0.1",
+      "NODE_PATH": "${HESTIA}/data/nodeJS"
+    }
+  }]
 }
 EOL
 
-chown $user:$user "$ecosystem"
-
-if [ -z "$json" ]; then
-	runuser -l $user "pm2 delete \"$ecosystem\""
-	runuser -l $user "pm2 start \"$ecosystem\""
+	chown $user:$user "$ecosystem"
 fi
+
+readarray -t found < <(find "$base" -maxdepth 1 -type s -name '*.sock' -exec basename {} \; | grep -E "^(${domain}-)[0-9]+(.sock)$")
+
+if [ "${#found[@]}" -eq 0 ]; then
+	found=("${domain}-0.sock")
+fi
+
+rm "$sockets"
+
+for sock in "${found[@]}"; do
+	echo "server unix:${base}/${sock};" >> "$sockets"
+done

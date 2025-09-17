@@ -3,6 +3,9 @@
 # DO NOT MODIFY THIS FILE! CHANGES WILL BE LOST WHEN REBUILDING DOMAINS   #
 # https://hestiacp.com/docs/server-administration/web-templates.html      #
 #=========================================================================#
+upstream %domain%_backend {
+	include %home%/%user%/conf/web/%domain%/nginx-hestia-nodeJS-sockets.conf;
+}
 
 server {
 	listen      %ip%:%proxy_ssl_port% ssl;
@@ -26,7 +29,7 @@ server {
 	}
 
 	location / {
-		proxy_pass http://unix:%home%/%user%/web/%domain%/private/hestia-nodeJS/hestia-nodeJS.sock:$request_uri;
+		proxy_pass http://%domain%_backend;
 
 		proxy_set_header X-Forwarded-Proto $scheme;
 		proxy_set_header X-Real-IP $remote_addr;
